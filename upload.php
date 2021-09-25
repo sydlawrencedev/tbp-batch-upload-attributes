@@ -6,6 +6,7 @@ loggedInCheck();
 
 $access_token = $_SESSION['tbp_access_token'];
 
+$start_time = time();
 
 date_default_timezone_set("UTC");
 $audit_log_date = date("d-m-Y H:i:s");
@@ -186,6 +187,12 @@ echo $done." done / ".$fail." failed / ".$number_of_users_to_be_updated." total<
 
 echo "<br/>";
 echo "<br/>";
+
+$end_time = time();
+$time_to_complete = $end_time - $start_time;
+$time_per_person = ($time_to_complete/$number_of_users_to_be_updated);
+echo $time_to_complete. " seconds to complete - ".$time_per_person."s per person = ".(($time_per_person*40000)/60/60). " hours for 40000";
+
 echo "<br/>";
 ?>
 <a href="form.php">Go again</a>
