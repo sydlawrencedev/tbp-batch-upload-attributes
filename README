@@ -1,7 +1,10 @@
-php -S localhost:9000
 
-visit /check.php to check set up is correct
+# Bulk attribute csv upload
 
+Using The Bot Platfor API to bulk upload attributes from a csv file
+https://dev.thebotplatform.com
+
+## Recommended settings
 
 ; Maximum allowed size for uploaded files.
 ; http://php.net/upload-max-filesize
@@ -18,10 +21,13 @@ post_max_size = 48M
 ; Note: This directive is hardcoded to 0 for the CLI SAPI
 max_execution_time = 600
 
+You can visit /check.php to check set up is correct
 
+## CLI tool
 
+Along with this there is also a CLI tool which can be used as below:
 
-% php cli.php filename=test_10.csv client_id=fda383bc-ce8d-4b2b-8f7d-77f3dd7bbeaa
+```% php cli.php filename=test_10.csv client_id=CLIENT_ID
 
 Open the following URL in a browser to continue
 https://api.thebotplatform.com/oauth2/auth?state=state&response_type=code&approval_prompt=auto&redirect_uri=http%3A%2F%2F127.0.0.1%3A8080%2Fauthorization-code%2Fcallback&client_id=client_id
@@ -29,14 +35,14 @@ Getting an access token...
 Loading attributes from test_10.csv
 10 users to be updated
 2 attributes to be updated
-Unable to retrieve user with supplied identifier: donn@thebotplatform.com
-Updated franz@thebotplatform.com
-Updated lauren.gilman@thebotplatform.com
-Updated paul@thebotplatform.com
-Updated sophie@thebotplatform.com
-Updated syd@thebotplatform.com
-Updated tom@thebotplatform.com
-Unable to retrieve user with supplied identifier: donn@thebotplatform.coma
-Unable to retrieve user with supplied identifier: franz@thebotplatform.coma
-Unable to retrieve user with supplied identifier: lauren.gilman@thebotplatform.coma
-6 success / 4 failed / 10 total
+Unable to retrieve user with supplied identifier: donn@thebotplatform.org
+Updated franz@thebotplatform.org
+Updated lauren.gilman@thebotplatform.org
+Updated paul@thebotplatform.org
+Updated sophie@thebotplatform.org
+Updated syd@thebotplatform.org
+Updated tom@thebotplatform.org
+Unable to retrieve user with supplied identifier: donn@thebotplatform.orga
+Unable to retrieve user with supplied identifier: franz@thebotplatform.orga
+Unable to retrieve user with supplied identifier: lauren.gilman@thebotplatform.orga
+6 success / 4 failed / 10 total```
