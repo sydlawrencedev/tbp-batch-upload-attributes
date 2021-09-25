@@ -2,6 +2,14 @@
 
 class TBPCLI {
   public static function login() {
+
+    function http($url, $params=false) {
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      if($params)
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
+      return json_decode(curl_exec($ch));
+    }
     $ip = '127.0.0.1';
     $port = '8080';
     

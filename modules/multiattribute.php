@@ -50,9 +50,9 @@ function multiAttribute($access_token, $filename) {
         $attributes = array();
         for($y=$_ENV['ATTRIBUTE_OFFSET']; $y < count($data); $y++)
         {
-            $attributes[] = generateAttributeObj(
-            $attribute_ids[$y-$_ENV['ATTRIBUTE_OFFSET']],
-            $data[$y]
+            $attributes[] = TBP::generateAttributeObj(
+                $attribute_ids[$y-$_ENV['ATTRIBUTE_OFFSET']],
+                $data[$y]
             );
         }
 
