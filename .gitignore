@@ -1,0 +1,7 @@
+vendor
+test*
+auditlog.txt
+myDatabase
+notes
+error_log
+composer.phar

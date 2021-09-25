@@ -1,0 +1,12 @@
+{
+    "require": {
+        "auth0/auth0-php": "^7.5",
+        "guzzlehttp/guzzle": "^7.3",
+        "guzzlehttp/psr7": "^2.0",
+        "http-interop/http-factory-guzzle": "^1.1",
+        "vlucas/phpdotenv": "^5.3",
+        "steampixel/simple-php-router": "^0.7.0",
+        "league/oauth2-client": "^2.6",
+        "rakibtg/sleekdb": "^2.12"
+    }
+}
