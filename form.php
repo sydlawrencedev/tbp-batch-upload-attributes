@@ -56,6 +56,12 @@ loggedInCheck();
                 </tbody>
             </table>
 
+            <div class="alert alert-danger" role="alert">
+                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                <span class="sr-only">Warning:</span>
+                Max file size: <?php echo ini_get('upload_max_filesize'); ?>
+            </div>
+
 
             <form action="upload.php" method="post" enctype="multipart/form-data">
                 Select file to upload:
