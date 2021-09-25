@@ -1,8 +1,100 @@
 <?php
 
+Class BulkAttributes {
+
+    function __construct() {
+        $this->attributeRequests = [];
+    }
+    static function factory() {
+        return new self();
+    }
+
+    function setup($access_token, $email, $attributes) {
+        $this->attributeRequests[] = array(
+            "access_token" => $access_token,
+            "email" => $email,
+            "attributes" => $attributes
+          );
+    }
+
+    function process() {
+        $success = 0;
+        $fail = 0;
+
+        // array of curl handles
+        $multiCurl = array();
+        // data to be returned
+        $result = array();
+        $mh = curl_multi_init();
+        $i = 0;
+        $emails = [];
+        while( $attr = array_shift( $this->attributeRequests ) ) {  
+            $emails[] = $attr['email'];
+
+            $multiCurl[$i] = TBP::factory($attr['access_token'])->constructRequest(
+            "users/".urlencode($attr['email']),
+            "PATCH",
+            array(
+                "data" => array(
+                "type" => 'user',
+                "attributes" => array(
+                    "state" => $attr['attributes']
+                )
+                )
+            )
+            );
+            curl_multi_add_handle($mh, $multiCurl[$i]); 
+            $i++;   
+        }
+
+        $index=null;
+
+        do {
+            curl_multi_exec($mh,$index);
+        } while($index > 0);
+        // get content and remove handles
+        foreach($multiCurl as $k => $ch) {
+            $result[$k] = json_decode(curl_multi_getcontent($ch));
+            curl_multi_remove_handle($mh, $ch);
+
+            if (!$result[$k]) {
+            switch ($code = curl_getinfo($ch, CURLINFO_HTTP_CODE)) {
+                case 204:
+                $success++;
+                auditLog("Updated ".$emails[$k], true);
+                break;
+                case 403:
+                $fail++;
+                exceededAPILimit();
+                break;
+                default:
+                $fail++;
+                auditLog("Error ".$code." ".$emails[$k], true);
+            }
+            } else {
+            $fail++;
+            if ($result[$k]->errors[0]->detail) {
+                auditLog($result[$k]->errors[0]->detail, true);
+            }
+            }
+        }
+        // close
+        curl_multi_close($mh);
+
+        
+
+        return array(
+            "success" => $success,
+            "fail" => $fail
+        );
+    }
+}
+
 function multiAttribute($access_token, $filename) {
     $headers = false;
     $people = [];
+
+    $process = BulkAttributes::factory();
 
     $done = 0;
     $fail = 0;
@@ -57,10 +149,10 @@ function multiAttribute($access_token, $filename) {
         }
 
         //update the attributes
-        setupMultipleAttributes($access_token, $email, $attributes);
+        $process->setup($access_token, $email, $attributes);
         
         if ($processed % $_ENV['PROCESS_AT_A_TIME'] === 0) {
-            $response = setMultipleAttributes();
+            $response = $process->process();
             $done += $response['success'];
             $fail += $response['fail'];
         }
@@ -71,7 +163,7 @@ function multiAttribute($access_token, $filename) {
     fclose($open);
     }
 
-    $response = setMultipleAttributes();
+    $response = $process->process();
     $done += $response['success'];
     $fail += $response['fail'];
 

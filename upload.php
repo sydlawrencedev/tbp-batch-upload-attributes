@@ -10,8 +10,6 @@ $start_time = time();
 date_default_timezone_set("UTC");
 $audit_log_date = date("d-m-Y H:i:s");
 
-$target_dir = "uploads/";
-$uploadOk = 1;
 //grabs the BOT ID from the form and stores it to be used to name the file
 $target_new_name = $_SESSION['client_id'];
 //Sets new filename for when it is uploaded
@@ -25,15 +23,10 @@ if (!isset($_FILES["fileToUpload"])) {
 
 auditLog("New Form Input-{$audit_log_date}");
 // Check if $uploadOk is set to 0 by an error
-if ($uploadOk == 0) {
-  auditLog("Error Uploading form", true);
-// if everything is ok, try to upload file
+if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], "uploads/{$filename}.csv")) {
+  auditLog("The file ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"])). " has been uploaded.", true);
 } else {
-  if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], "uploads/{$filename}.csv")) {
-    auditLog("The file ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"])). " has been uploaded.", true);
-  } else {
-    auditLog("Error Uploading form", true);
-  }
+  auditLog("Error Uploading form", true);
 }
 
 //Store the CSV in an array

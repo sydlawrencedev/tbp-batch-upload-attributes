@@ -5,6 +5,15 @@ if (!isset($_ENV['TBP_API_REDIRECT_URL'])) {
   exit;
 }
 
+if (!isset($_ENV['TBP_BASE_URL'])) {
+  $_ENV['TBP_BASE_URL'] = "https://api.thebotplatform.com/v1.0/";
+}
+if (!isset($_ENV['TBP_AUTH_URL'])) {
+  $_ENV['TBP_AUTH_URL'] = "https://api.thebotplatform.com/oauth2/auth";
+}
+if (!isset($_ENV['TBP_TOKEN_URL'])) {
+  $_ENV['TBP_TOKEN_URL'] = "https://api.thebotplatform.com/oauth2/token";
+}
 
 class TBP {
 
@@ -14,7 +23,6 @@ class TBP {
   }
 
   function __construct($access_token) {
-    $this->base_url = "https://api.thebotplatform.com/v1.0/";
     $this->access_token = $access_token;
   }
 
@@ -22,7 +30,10 @@ class TBP {
     return self::getProvider($client_id, $client_secret, $_ENV['TBP_API_REDIRECT_URL'])->getAuthorizationUrl();
   }
 
-  public static function getProvider($client_id, $client_secret, $redirect_url) {
+  public static function getProvider($client_id, $client_secret, $redirect_url = false) {
+    if (!$redirect_url) {
+      $redirect_url = $_ENV['TBP_API_REDIRECT_URL'];
+    }
     if (!$client_id || !$client_secret) {
       throw new Exception("Expecting client_id and client_secret");
     }
@@ -30,29 +41,32 @@ class TBP {
       'clientId'                => $client_id,    // The client ID assigned to you by the provider
       'clientSecret'            => $client_secret,    // The client password assigned to you by the provider
       'redirectUri'             => $_ENV['TBP_API_REDIRECT_URL'],
-      'urlAuthorize'            => 'https://api.thebotplatform.com/oauth2/auth',
-      'urlAccessToken'          => 'https://api.thebotplatform.com/oauth2/token',
+      'urlAuthorize'            => $_ENV['TBP_AUTH_URL'],
+      'urlAccessToken'          => $_ENV['TBP_TOKEN_URL'],
       'urlResourceOwnerDetails' => 'https://service.example.com/resource'
     ]);
   }
 
   function validate() {
-    $attributes = TBP::getAttributes($this->access_token);
+    try {
+      $attributes = TBP::factory($this->access_token)->getAttributes();
+    } catch (Exception $e) {
+      return false;
+    }
     if ($attributes === false) {
       return false;
     }
     return true;
   }
   
-  
-
   function constructRequest($method, $requestType = "POST", $postdata = "") {
-    if (is_object($postdata)) {
+    if (is_object($postdata) || is_array($postdata)) {
       $postdata = json_encode($postdata);
     }
+    $access_token = $this->access_token;
     $curl = curl_init();
     curl_setopt_array($curl, [
-      CURLOPT_URL => $this->base_url.$method,
+      CURLOPT_URL => $_ENV['TBP_BASE_URL'].$method,
       CURLOPT_RETURNTRANSFER => true,
       CURLOPT_ENCODING => "",
       CURLOPT_MAXREDIRS => 10,
@@ -60,11 +74,12 @@ class TBP {
       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
       CURLOPT_CUSTOMREQUEST => $requestType,
       CURLOPT_POSTFIELDS => $postdata,
-      CURLOPT_HTTPHEADER => [
-          "Accept: application/json",
-          "Authorization: Bearer {$this->access_token}"
-      ],
+      
     ]);
+    curl_setopt($curl, CURLOPT_HTTPHEADER,[
+        "Content-Type: application/json",
+        "Authorization: Bearer {$access_token}"
+      ]);
     return $curl;
   }
 

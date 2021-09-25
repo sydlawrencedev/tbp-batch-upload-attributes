@@ -14,12 +14,8 @@ $_ENV['TBP_API_REDIRECT_URL']=$protocol.$_SERVER['HTTP_HOST'].$_SERVER['DIR']."t
 
 
 require 'modules/TBP.php';
+require 'modules/TBPCLI.php';
 require 'modules/multiattribute.php';
-
-
-
-
-
 
 
 $databaseDirectory = __DIR__ . "/myDatabase";
@@ -112,104 +108,10 @@ function auditLog($str, $force_display = false)
   }
 }
 
-$multiAttributes = [];
-function setupMultipleAttributes($access_token, $email, $attributes)
-{
-  global $multiAttributes;
-  $multiAttributes[] = array(
-    "access_token" => $access_token,
-    "email" => $email,
-    "attributes" => $attributes
-  );
-}
 
 function exceededAPILimit() {
   auditLog("Exceeded API Limit, please go back try again", true);
   exit;
 }
-
-function setMultipleAttributes() {
-  global $multiAttributes;
-  $success = 0;
-  $fail = 0;
-
-  // array of curl handles
-  $multiCurl = array();
-  // data to be returned
-  $result = array();
-  $mh = curl_multi_init();
-  $i = 0;
-  $emails = [];
-  while( $attr = array_shift( $multiAttributes ) ) {  
-    $emails[] = $attr['email'];
-
-    $fetchURL = "https://api.thebotplatform.com/v1.0/users/".urlencode($attr['email']);
-    $multiCurl[$i] = curl_init();
-    curl_setopt($multiCurl[$i], CURLOPT_URL,$fetchURL);
-    curl_setopt($multiCurl[$i], CURLOPT_RETURNTRANSFER,1);
-    curl_setopt($multiCurl[$i], CURLOPT_ENCODING,"");
-    curl_setopt($multiCurl[$i], CURLOPT_MAXREDIRS,10);
-    curl_setopt($multiCurl[$i], CURLOPT_TIMEOUT,30);
-    curl_setopt($multiCurl[$i], CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_1_1);
-    curl_setopt($multiCurl[$i], CURLOPT_CUSTOMREQUEST,"PATCH");
-    curl_setopt($multiCurl[$i], CURLOPT_POSTFIELDS,json_encode(array(
-      "data" => array(
-        "type" => 'user',
-        "attributes" => array(
-          "state" => $attr['attributes']
-        )
-      )
-    )));
-    curl_setopt($multiCurl[$i], CURLOPT_HTTPHEADER,[
-      "Content-Type: application/json",
-      "Authorization: Bearer {$attr['access_token']}"
-    ]);
-    curl_multi_add_handle($mh, $multiCurl[$i]); 
-    $i++;   
-  }
-
-  $index=null;
-
-  do {
-    curl_multi_exec($mh,$index);
-  } while($index > 0);
-  // get content and remove handles
-  foreach($multiCurl as $k => $ch) {
-    $result[$k] = json_decode(curl_multi_getcontent($ch));
-    curl_multi_remove_handle($mh, $ch);
-
-    if (!$result[$k]) {
-      switch ($code = curl_getinfo($ch, CURLINFO_HTTP_CODE)) {
-        case 204:
-          $success++;
-          auditLog("Updated ".$emails[$k], true);
-          break;
-        case 403:
-          $fail++;
-          exceededAPILimit();
-          break;
-        default:
-          $fail++;
-          auditLog("Error ".$code." ".$emails[$k], true);
-      }
-    } else {
-      $fail++;
-      if ($result[$k]->errors[0]->detail) {
-        auditLog($result[$k]->errors[0]->detail, true);
-      }
-    }
-  }
-  // close
-  curl_multi_close($mh);
-
- 
-
-  return array(
-    "success" => $success,
-    "fail" => $fail
-  );
-
-}
-
 
 ?>
