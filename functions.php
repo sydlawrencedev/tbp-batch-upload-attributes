@@ -9,12 +9,18 @@ error_reporting(E_ALL);
 // Load our environment variables from the ._ENV file:
 require 'vendor/autoload.php';
 (Dotenv\Dotenv::createImmutable(__DIR__, "project.env"))->load();
-$protocol = strtolower(substr($_SERVER["SERVER_PROTOCOL"],0,strpos( $_SERVER["SERVER_PROTOCOL"],'/'))).'://';
-$_ENV['TBP_API_REDIRECT_URL']=$protocol.$_SERVER['HTTP_HOST'].$_SERVER['DIR']."tbplogin.php";
 
-
-require 'modules/TBP.php';
+if (php_sapi_name() != 'cli') {
+  $protocol = strtolower(substr($_SERVER["SERVER_PROTOCOL"],0,strpos( $_SERVER["SERVER_PROTOCOL"],'/'))).'://';
+  $_ENV['TBP_API_REDIRECT_URL']=$protocol.$_SERVER['HTTP_HOST'].$_SERVER['DIR']."tbplogin.php";
+}
 require 'modules/TBPCLI.php';
+
+if (php_sapi_name() == 'cli') {
+  $_ENV['TBP_API_REDIRECT_URL'] = TBPCLI::redirect_uri();
+}
+require 'modules/TBP.php';
+
 require 'modules/multiattribute.php';
 
 

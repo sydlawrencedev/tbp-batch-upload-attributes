@@ -1,6 +1,19 @@
 <?php
 
+if (!isset($_ENV['TBPCLI_IP'])) {
+  $_ENV['TBPCLI_IP'] = "127.0.0.1";
+}
+
+if (!isset($_ENV['TBPCLI_PORT'])) {
+  $_ENV['TBPCLI_PORT'] = "8080";
+}
+
+
 class TBPCLI {
+
+  public static function redirect_uri() {
+    return 'http://'.$_ENV['TBPCLI_IP'].':'.$_ENV['TBPCLI_PORT'].'/authorization-code/callback';
+  }
   public static function login() {
 
     function http($url, $params=false) {
@@ -10,8 +23,8 @@ class TBPCLI {
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
       return json_decode(curl_exec($ch));
     }
-    $ip = '127.0.0.1';
-    $port = '8080';
+    $ip = $_ENV['TBPCLI_IP'];
+    $port = $_ENV['TBPCLI_PORT'];
     
     $redirect_uri = 'http://'.$ip.':'.$port.'/authorization-code/callback';
     $socket_str = 'tcp://'.$ip.':'.$port;
@@ -33,7 +46,7 @@ class TBPCLI {
 
     $_ENV['TBP_API_REDIRECT_URL'] = $redirect_uri;
 
-    $authorize_url = TBP::getTBPLoginURL($client_id, $client_secret);
+    $authorize_url = TBP::getLoginURL($client_id, $client_secret);
     echo "Open the following URL in a browser to continue\n";
     echo $authorize_url."\n";
     shell_exec("open '".$authorize_url."'");
