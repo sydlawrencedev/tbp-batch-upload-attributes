@@ -302,16 +302,7 @@ function getAttributes($bearertoken)
 
 function updateAttributes($bearertoken, $email, $attributes)
 {
-  global $auditfile;
-    $curl = curl_init();
-    $postfields = array(
-      "data" => array(
-        "type" => 'user',
-        "attributes" => array(
-          "state" => $attributes
-        )
-      )
-    );
+  $curl = curl_init();
 
   curl_setopt_array($curl, [
     CURLOPT_URL => "https://api.thebotplatform.com/v1.0/users/".urlencode($email),
@@ -321,7 +312,14 @@ function updateAttributes($bearertoken, $email, $attributes)
     CURLOPT_TIMEOUT => 30,
     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
     CURLOPT_CUSTOMREQUEST => "PATCH",
-    CURLOPT_POSTFIELDS => json_encode($postfields),
+    CURLOPT_POSTFIELDS => json_encode(array(
+      "data" => array(
+        "type" => 'user',
+        "attributes" => array(
+          "state" => $attributes
+        )
+      )
+    )),
     CURLOPT_HTTPHEADER => [
       "Content-Type: application/json",
       "Authorization: Bearer {$bearertoken}"
@@ -334,8 +332,7 @@ function updateAttributes($bearertoken, $email, $attributes)
   curl_close($curl);
   
   if ($err) {
-    echo "cURL Error #:" . $err;
-    file_put_contents($auditfile, "cURL Error - {$err}", FILE_APPEND | LOCK_EX);
+    auditLog("cURL Error #:" . $err);
     return false;
   } else {
     if (!$response) {
@@ -348,7 +345,7 @@ function updateAttributes($bearertoken, $email, $attributes)
     } catch (Exception $e) {
 
     }
-      file_put_contents($auditfile, "Response - {$response}", FILE_APPEND | LOCK_EX);
+    auditLog("Response - {$response}");
     return false;
   }  
 
@@ -391,21 +388,66 @@ function setMultipleAttributes() {
   global $multiAttributes;
   $success = 0;
   $fail = 0;
+
+  // array of curl handles
+  $multiCurl = array();
+  // data to be returned
+  $result = array();
+  $mh = curl_multi_init();
+  $i = 0;
+  $emails = [];
   while( $attr = array_shift( $multiAttributes ) ) {  
-    $report = updateAttributes(
-      $attr['access_token'],
-      $attr['email'],
-      $attr['attributes'],
-    );
-    if ($report) {
+    $emails[] = $attr['email'];
+
+    $fetchURL = "https://api.thebotplatform.com/v1.0/users/".urlencode($attr['email']);
+    $multiCurl[$i] = curl_init();
+    curl_setopt($multiCurl[$i], CURLOPT_URL,$fetchURL);
+    curl_setopt($multiCurl[$i], CURLOPT_RETURNTRANSFER,1);
+    curl_setopt($multiCurl[$i], CURLOPT_ENCODING,"");
+    curl_setopt($multiCurl[$i], CURLOPT_MAXREDIRS,10);
+    curl_setopt($multiCurl[$i], CURLOPT_TIMEOUT,30);
+    curl_setopt($multiCurl[$i], CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_1_1);
+    curl_setopt($multiCurl[$i], CURLOPT_CUSTOMREQUEST,"PATCH");
+    curl_setopt($multiCurl[$i], CURLOPT_POSTFIELDS,json_encode(array(
+      "data" => array(
+        "type" => 'user',
+        "attributes" => array(
+          "state" => $attr['attributes']
+        )
+      )
+    )));
+    curl_setopt($multiCurl[$i], CURLOPT_HTTPHEADER,[
+      "Content-Type: application/json",
+      "Authorization: Bearer {$attr['access_token']}"
+    ]);
+    curl_multi_add_handle($mh, $multiCurl[$i]); 
+    $i++;   
+  }
+
+  $index=null;
+
+  do {
+    curl_multi_exec($mh,$index);
+  } while($index > 0);
+  // get content and remove handles
+  foreach($multiCurl as $k => $ch) {
+    $result[$k] = json_decode(curl_multi_getcontent($ch));
+    curl_multi_remove_handle($mh, $ch);
+    if (!$result[$k]) {
       $success++;
-      auditLog("Updated ".$attr['email']);
+      auditLog("Updated ".$emails[$k]); 
     } else {
       $fail++;
-      echo "<br/>";
+      if ($result[$k]->errors[0]->detail) {
+        auditLog($result[$k]->errors[0]->detail); 
+      }
     }
-    
   }
+  // close
+  curl_multi_close($mh);
+
+ 
+
   return array(
     "success" => $success,
     "fail" => $fail

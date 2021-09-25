@@ -17,8 +17,6 @@ $target_new_name = $_SESSION['client_id'];
 //Sets new filename for when it is uploaded
 $filename = "{$target_new_name}-{$audit_log_date}";
 
-$attribute_offset = 2;
-
 
 if (!isset($_FILES["fileToUpload"])) {
   header("Location: form.php");
@@ -66,13 +64,13 @@ if (($open = fopen($fullFilename, "r")) !== FALSE)
       //intialise the array to hold the attributes to be updated
       $attributes = [];
       //adds the attributes to be updated to the array
-      for($pos=$attribute_offset; $pos< count($headers); $pos++)
+      for($pos=$_ENV['ATTRIBUTE_OFFSET']; $pos< count($headers); $pos++)
       {
         $attributes[] = $headers[$pos];
       }
       $attribute_ids = getOrCreateAttributes($attributes, $access_token);
 
-      auditLog((count($headers) - $attribute_offset)." attributes to be updated");
+      auditLog((count($headers) - $_ENV['ATTRIBUTE_OFFSET'])." attributes to be updated");
 
     } else {
       $processed++;
@@ -80,10 +78,10 @@ if (($open = fopen($fullFilename, "r")) !== FALSE)
 
       // get each attribute
       $attributes = array();
-      for($y=$attribute_offset; $y < count($data); $y++)
+      for($y=$_ENV['ATTRIBUTE_OFFSET']; $y < count($data); $y++)
       {
         $attributes[] = generateAttributeObj(
-          $attribute_ids[$y-$attribute_offset],
+          $attribute_ids[$y-$_ENV['ATTRIBUTE_OFFSET']],
           $data[$y]
         );
       }
@@ -91,7 +89,7 @@ if (($open = fopen($fullFilename, "r")) !== FALSE)
       //update the attributes
       setupMultipleAttributes($access_token, $email, $attributes);
       
-      if ($processed % 5 === 0) {
+      if ($processed % $_ENV['PROCESS_AT_A_TIME'] === 0) {
         $response = setMultipleAttributes();
         $done += $response['success'];
         $fail += $response['fail'];
