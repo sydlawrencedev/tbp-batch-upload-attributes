@@ -20,7 +20,7 @@ loggedInCheck();
                 <li class="nav-item">
                     <a class="nav-lin" href="https://thebotplatform.com/" target="_blank" rel="noopener noreferrer">Built on top of The Bot Platform API</a>
                 &nbsp;
-                    <a class="nav-lin" href="/logout.php" rel="noopener noreferrer">Logout</a>
+                    <a class="nav-lin" href="logout.php" rel="noopener noreferrer">Logout</a>
                 </li>
 
             </ul>
