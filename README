@@ -17,3 +17,26 @@ post_max_size = 48M
 ; http://php.net/max-execution-time
 ; Note: This directive is hardcoded to 0 for the CLI SAPI
 max_execution_time = 600
+
+
+
+
+% php cli.php filename=test_10.csv client_id=fda383bc-ce8d-4b2b-8f7d-77f3dd7bbeaa
+
+Open the following URL in a browser to continue
+https://api.thebotplatform.com/oauth2/auth?state=state&response_type=code&approval_prompt=auto&redirect_uri=http%3A%2F%2F127.0.0.1%3A8080%2Fauthorization-code%2Fcallback&client_id=client_id
+Getting an access token...
+Loading attributes from test_10.csv
+10 users to be updated
+2 attributes to be updated
+Unable to retrieve user with supplied identifier: donn@thebotplatform.com
+Updated franz@thebotplatform.com
+Updated lauren.gilman@thebotplatform.com
+Updated paul@thebotplatform.com
+Updated sophie@thebotplatform.com
+Updated syd@thebotplatform.com
+Updated tom@thebotplatform.com
+Unable to retrieve user with supplied identifier: donn@thebotplatform.coma
+Unable to retrieve user with supplied identifier: franz@thebotplatform.coma
+Unable to retrieve user with supplied identifier: lauren.gilman@thebotplatform.coma
+6 success / 4 failed / 10 total

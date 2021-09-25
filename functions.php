@@ -1,5 +1,7 @@
 <?php
 
+require 'modules/multiattribute.php';
+
 require 'vendor/autoload.php';
 
 ini_set('session.gc_maxlifetime', 3600);
@@ -19,6 +21,10 @@ error_reporting(E_ALL);
 
 $databaseDirectory = __DIR__ . "/myDatabase";
 
+$_ENV['br'] = "<br/>";
+if (php_sapi_name() == 'cli') {
+  $_ENV['br'] = "\n";
+}
 
 function saveCreds($client_id, $client_secret)
 {
@@ -43,16 +49,17 @@ function checkCreds($client_id) {
 
 $auditfile = 'auditlog.txt';
 
+function checkAccessToken($access_token)
+{
+  $attributes = getAttributes($_SESSION['tbp_access_token']);
+  if ($attributes === false) {
+    return false;
+  }
+  return true;
+}
+
 function loggedInCheck()
 {
-
-
-
-  $ip = '127.0.0.1';
-  $port = '8080';
-  
-  $redirect_uri = 'http://'.$ip.':'.$port.'/authorization-code/callback';
-  $socket_str = 'tcp://'.$ip.':'.$port;
   
   function http($url, $params=false) {
     $ch = curl_init($url);
@@ -62,15 +69,35 @@ function loggedInCheck()
     return json_decode(curl_exec($ch));
   }
   if (isset($_SESSION['tbp_access_token']) && $_SESSION['tbp_access_token']) {
-
+    if (!checkAccessToken($_SESSION['tbp_access_token'])) {
+      header('Location: login.php');
+      exit;
+    }
   } else if (php_sapi_name() == 'cli') {
     
-    $client_id = "fda383bc-ce8d-4b2b-8f7d-77f3dd7bbeaa";
-  $client_secret = "30u~7ZBa~oAxmjcXEL.nMReqW7";
+
+    $ip = '127.0.0.1';
+    $port = '8080';
     
-    if (php_sapi_name() == 'cli') {
-      $_ENV['TBP_API_REDIRECT_URL'] = $redirect_uri;
+    $redirect_uri = 'http://'.$ip.':'.$port.'/authorization-code/callback';
+    $socket_str = 'tcp://'.$ip.':'.$port;
+
+    $client_id = $_ENV['TBP_CLI_CLIENT_ID'];
+
+    $creds = checkCreds($client_id);
+    if ($creds) {
+      $client_secret = $_ENV['TBP_CLI_CLIENT_SECRET'] = $creds[0]['client_secret'];
+    } else {
+      //get 3 commands from user
+      $line = readline("You're new here, what's your client_secret? ");
+      $_ENV['TBP_CLI_CLIENT_SECRET'] = $line;
+      saveCreds($_ENV['TBP_CLI_CLIENT_ID'], $_ENV['TBP_CLI_CLIENT_SECRET']);      
     }
+    $client_secret = $_ENV['TBP_CLI_CLIENT_SECRET'];
+    
+  
+
+    $_ENV['TBP_API_REDIRECT_URL'] = $redirect_uri;
 
     $authorize_url = getTBPLoginURL($client_id, $client_secret);
     echo "Open the following URL in a browser to continue\n";
@@ -151,7 +178,7 @@ function loggedInCheck()
     $code = $auth['code'];
 
     echo "Getting an access token...\n";
-    $response = http($metadata->token_endpoint, [
+    $response = http('https://api.thebotplatform.com/oauth2/token', [
       'grant_type' => 'authorization_code',
       'code' => $code,
       'redirect_uri' => $redirect_uri,
@@ -201,9 +228,9 @@ function getOrCreateAttributes($attributes_to_fetch, $access_token)
     $attribute_name = $attributes_to_fetch[$x];
     $attribute_id = array_search($attribute_name, $result);
     if (!$attribute_id) {
-      echo "attribute ".$attribute_name." does not exist, creating attribute<br/>";
+      echo "attribute ".$attribute_name." does not exist, creating attribute".$_ENV['br'];
       createAttribute($attribute_name, $access_token);
-      return getAttributesTemp();
+      return getOrCreateAttributes($attributes_to_fetch, $access_token);
     }
     
     $attribute_ids_to_be_updated[] = $attribute_id;
@@ -293,8 +320,7 @@ function getAttributes($bearertoken)
       file_put_contents($auditfile, "Attributes - {$attributes}", FILE_APPEND | LOCK_EX);
     }
     if ($attributes === "Unauthorized") {
-      echo "Unauthorized";
-      exit;
+      return false;
     }
     $obj = json_decode($attributes);
     return json_decode($attributes);
@@ -357,7 +383,7 @@ function updateAttributes($bearertoken, $email, $attributes)
 function auditLog($str)
 {
   if ($_ENV['DISPLAY_LOG']) {
-    echo $str."<br/>";
+    echo $str.$_ENV['br'];
   }
   if ($_ENV['OUTPUT_LOG']) {
     file_put_contents($_ENV['OUTPUT_LOG'], $str, FILE_APPEND | LOCK_EX);
@@ -382,6 +408,11 @@ function setupMultipleAttributes($access_token, $email, $attributes)
     "email" => $email,
     "attributes" => $attributes
   );
+}
+
+function exceededAPILimit() {
+  auditLog("Exceeded API Limit, please go back try again");
+  exit;
 }
 
 function setMultipleAttributes() {
@@ -433,9 +464,23 @@ function setMultipleAttributes() {
   foreach($multiCurl as $k => $ch) {
     $result[$k] = json_decode(curl_multi_getcontent($ch));
     curl_multi_remove_handle($mh, $ch);
+    // if (curl_errno($ch)) {
+    // }
+
     if (!$result[$k]) {
-      $success++;
-      auditLog("Updated ".$emails[$k]); 
+      switch ($code = curl_getinfo($ch, CURLINFO_HTTP_CODE)) {
+        case 204:
+          $success++;
+          auditLog("Updated ".$emails[$k]);
+          break;
+        case 403:
+          $fail++;
+          exceededAPILimit();
+          break;
+        default:
+          $fail++;
+          auditLog("Error ".$code." ".$emails[$k]);
+      }
     } else {
       $fail++;
       if ($result[$k]->errors[0]->detail) {
