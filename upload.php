@@ -26,13 +26,13 @@ if (!isset($_FILES["fileToUpload"])) {
 auditLog("New Form Input-{$audit_log_date}");
 // Check if $uploadOk is set to 0 by an error
 if ($uploadOk == 0) {
-  auditLog("Error Uploading form");
+  auditLog("Error Uploading form", true);
 // if everything is ok, try to upload file
 } else {
   if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], "uploads/{$filename}.csv")) {
-    auditLog("The file ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"])). " has been uploaded.");
+    auditLog("The file ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"])). " has been uploaded.", true);
   } else {
-    auditLog("Error Uploading form");
+    auditLog("Error Uploading form", true);
   }
 }
 
