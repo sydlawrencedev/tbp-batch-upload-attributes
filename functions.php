@@ -383,12 +383,12 @@ function updateAttributes($bearertoken, $email, $attributes)
   }
 }
 
-function auditLog($str)
+function auditLog($str, $force_display = false)
 {
-  if ($_ENV['DISPLAY_LOG']) {
+  if ($_ENV['DISPLAY_LOG'] !== "FALSE" || $force_display) {
     echo $str.$_ENV['br'];
   }
-  if ($_ENV['OUTPUT_LOG']) {
+  if ($_ENV['OUTPUT_LOG'] !== "FALSE") {
     file_put_contents($_ENV['OUTPUT_LOG'], $str, FILE_APPEND | LOCK_EX);
   }
 }
@@ -414,7 +414,7 @@ function setupMultipleAttributes($access_token, $email, $attributes)
 }
 
 function exceededAPILimit() {
-  auditLog("Exceeded API Limit, please go back try again");
+  auditLog("Exceeded API Limit, please go back try again", true);
   exit;
 }
 
@@ -467,14 +467,12 @@ function setMultipleAttributes() {
   foreach($multiCurl as $k => $ch) {
     $result[$k] = json_decode(curl_multi_getcontent($ch));
     curl_multi_remove_handle($mh, $ch);
-    // if (curl_errno($ch)) {
-    // }
 
     if (!$result[$k]) {
       switch ($code = curl_getinfo($ch, CURLINFO_HTTP_CODE)) {
         case 204:
           $success++;
-          auditLog("Updated ".$emails[$k]);
+          auditLog("Updated ".$emails[$k], true);
           break;
         case 403:
           $fail++;
@@ -482,12 +480,12 @@ function setMultipleAttributes() {
           break;
         default:
           $fail++;
-          auditLog("Error ".$code." ".$emails[$k]);
+          auditLog("Error ".$code." ".$emails[$k], true);
       }
     } else {
       $fail++;
       if ($result[$k]->errors[0]->detail) {
-        auditLog($result[$k]->errors[0]->detail); 
+        auditLog($result[$k]->errors[0]->detail, true);
       }
     }
   }
