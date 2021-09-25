@@ -10,7 +10,7 @@ function multiAttribute($access_token, $filename) {
 
     //Counts the number of users to be updated
     $number_of_users = getLineCount($filename);
-    auditLog(trim($number_of_users) . " users to be updated");
+    auditLog(trim($number_of_users) . " users to be updated", true);
 
 
     if (($open = fopen($filename, "r")) !== FALSE) 
@@ -30,11 +30,15 @@ function multiAttribute($access_token, $filename) {
         }
         $attribute_ids = getOrCreateAttributes($attributes, $access_token);
 
-        auditLog((count($headers) - $_ENV['ATTRIBUTE_OFFSET'])." attributes to be updated");
+        auditLog((count($headers) - $_ENV['ATTRIBUTE_OFFSET'])." attributes to be updated", true);
 
         } else {
         $processed++;
         $email = $data[0];
+        if (strpos($email, "@") <= 0) {
+            auditLog("Data doesn't appear to match expected csv file. Was expecting email but got: ".$email, true);
+            exit;
+        }
 
         // get each attribute
         $attributes = array();
