@@ -1,8 +1,5 @@
 <?php
 
-require 'modules/multiattribute.php';
-
-require 'vendor/autoload.php';
 
 session_start();
 
@@ -10,15 +7,18 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 // Load our environment variables from the ._ENV file:
+require 'vendor/autoload.php';
 (Dotenv\Dotenv::createImmutable(__DIR__, "project.env"))->load();
-
-// print_r($_ENV);
-// exit;
-
 $protocol = strtolower(substr($_SERVER["SERVER_PROTOCOL"],0,strpos( $_SERVER["SERVER_PROTOCOL"],'/'))).'://';
-
-
 $_ENV['TBP_API_REDIRECT_URL']=$protocol.$_SERVER['HTTP_HOST'].$_SERVER['DIR']."tbplogin.php";
+
+
+require 'modules/TBP.php';
+require 'modules/multiattribute.php';
+
+
+
+
 
 
 
@@ -102,7 +102,7 @@ function loggedInCheck()
 
     $_ENV['TBP_API_REDIRECT_URL'] = $redirect_uri;
 
-    $authorize_url = getTBPLoginURL($client_id, $client_secret);
+    $authorize_url = TBP::getTBPLoginURL($client_id, $client_secret);
     echo "Open the following URL in a browser to continue\n";
     echo $authorize_url."\n";
     shell_exec("open '".$authorize_url."'");
@@ -239,19 +239,6 @@ function getOrCreateAttributes($attributes_to_fetch, $access_token)
     $attribute_ids_to_be_updated[] = $attribute_id;
   }
   return $attribute_ids_to_be_updated;
-}
-
-function getTBPLoginURL($client_id, $client_secret) {
-
-  $provider = new \League\OAuth2\Client\Provider\GenericProvider([
-    'clientId'                => $client_id,    // The client ID assigned to you by the provider
-    'clientSecret'            => $client_secret,    // The client password assigned to you by the provider
-    'redirectUri'             => $_ENV['TBP_API_REDIRECT_URL'],
-    'urlAuthorize'            => 'https://api.thebotplatform.com/oauth2/auth',
-    'urlAccessToken'          => 'https://api.thebotplatform.com/oauth2/token',
-    'urlResourceOwnerDetails' => 'https://service.example.com/resource'
-  ]);
-  return $provider->getAuthorizationUrl();
 }
 
 function createAttribute($attribute, $bearertoken)
