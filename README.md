@@ -27,7 +27,8 @@ You can visit /check.php to check set up is correct
 
 Along with this there is also a CLI tool which can be used as below:
 
-```% php cli.php filename=test_10.csv client_id=CLIENT_ID
+```
+% php cli.php filename=test_10.csv client_id=CLIENT_ID
 
 Open the following URL in a browser to continue
 https://api.thebotplatform.com/oauth2/auth?state=state&response_type=code&approval_prompt=auto&redirect_uri=http%3A%2F%2F127.0.0.1%3A8080%2Fauthorization-code%2Fcallback&client_id=client_id
@@ -45,4 +46,5 @@ Updated tom@thebotplatform.org
 Unable to retrieve user with supplied identifier: donn@thebotplatform.orga
 Unable to retrieve user with supplied identifier: franz@thebotplatform.orga
 Unable to retrieve user with supplied identifier: lauren.gilman@thebotplatform.orga
-6 success / 4 failed / 10 total```
+6 success / 4 failed / 10 total
+```
