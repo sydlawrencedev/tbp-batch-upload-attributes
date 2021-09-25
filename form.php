@@ -28,10 +28,42 @@ loggedInCheck();
 
         </nav>
         <div class="mb-3">
+            <h1>Bulk attribute csv upload</h1>
+                    <form action="upload.php" method="post" enctype="multipart/form-data">
+                        <div class="form-group">
+                            Select file to upload:
+                            <input type="file" name="fileToUpload" id="fileToUpload">
+                        </div>
 
-            <h2>Bulk Attribute CSV Upload Form</h2> <br><br> Please upload the CSV file with the attributes you wish to be updated.
-            <br><br> Please make sure that the spreadsheet columns are formatted as follows and make sure that you use the attribute name as it appears within The Bot Platform BUT without the $.
-            <table class="table">
+                        <div class="form-group">
+                            <input type="submit" class="btn btn-primary" value="Upload File" name="submit">
+                        </div>
+                    </form>
+        </div>
+        <div class="mb-3">
+
+
+            <div class="alert alert-warning" role="alert">
+                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                <span class="sr-only">Warning:</span>
+                <ul>
+                    <li>Use the attribute name as it appears within The Bot Platform but WITHOUT the $</li>
+                    <li>Case sensitive</li>
+                    <li>Attributes start from the 3rd column</li>
+                    <li>Max file size: <?php echo ini_get('upload_max_filesize'); ?>B</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mb-3 alert-light" style="opacity:0.4">
+
+            
+
+
+            
+            <hr/>
+            <h3>Example CSV</h3>
+            <table class="table alert-light">
                 <thead>
                     <tr>
                         <th scope="col">Email address</th>
@@ -56,18 +88,6 @@ loggedInCheck();
                 </tbody>
             </table>
 
-            <div class="alert alert-danger" role="alert">
-                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                <span class="sr-only">Warning:</span>
-                Max file size: <?php echo ini_get('upload_max_filesize'); ?>
-            </div>
-
-
-            <form action="upload.php" method="post" enctype="multipart/form-data">
-                Select file to upload:
-                <input type="file" name="fileToUpload" id="fileToUpload"><br><br>
-                <input type="submit" value="Upload File" name="submit">
-            </form>
         </div>
     </div>
 </body>
