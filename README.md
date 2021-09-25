@@ -1,7 +1,7 @@
 
 # Bulk attribute csv upload
 
-Using The Bot Platfor API to bulk upload attributes from a csv file
+Using The Bot Platform API to bulk upload attributes from a csv file
 https://dev.thebotplatform.com
 
 ## Recommended settings
