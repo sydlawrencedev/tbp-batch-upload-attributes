@@ -150,7 +150,7 @@ function loggedInCheck()
   
     $code = $auth['code'];
 
-        echo "Getting an access token...\n";
+    echo "Getting an access token...\n";
     $response = http($metadata->token_endpoint, [
       'grant_type' => 'authorization_code',
       'code' => $code,
@@ -174,8 +174,44 @@ function loggedInCheck()
   }
 }
 
-function getTBPLoginURL($client_id, $client_secret) {
+function getLineCount($file)
+{
+  $str = 'perl -pe \'s/\r\n|\n|\r/\n/g\' ' . escapeshellarg($file) . ' | wc -l';
+  return exec($str);
+}
 
+function getOrCreateAttributes($attributes_to_fetch, $access_token)
+{
+  try {
+    $attributes = getAttributes($access_token);
+
+    //gets the attribute names and their associated IDs and stores in a new array called result 
+    $attribute_names = array_column($attributes->data, 'attributes');
+    $result = array_combine(array_column($attributes->data, 'id'),array_column($attribute_names, 'name'));
+  } catch (Exception $e) {
+    echo "ERROR, whoops";
+    exit;
+  }
+  //initialises the array of IDs to be updated
+  $attribute_ids_to_be_updated = [];
+
+  //Grabs the ID of each attribute to be updated in the order they are listed within the spreadsheet
+  for($x=0; $x< count($attributes_to_fetch); $x++)
+  {
+    $attribute_name = $attributes_to_fetch[$x];
+    $attribute_id = array_search($attribute_name, $result);
+    if (!$attribute_id) {
+      echo "attribute ".$attribute_name." does not exist, creating attribute<br/>";
+      createAttribute($attribute_name, $access_token);
+      return getAttributesTemp();
+    }
+    
+    $attribute_ids_to_be_updated[] = $attribute_id;
+  }
+  return $attribute_ids_to_be_updated;
+}
+
+function getTBPLoginURL($client_id, $client_secret) {
 
   $provider = new \League\OAuth2\Client\Provider\GenericProvider([
     'clientId'                => $client_id,    // The client ID assigned to you by the provider
@@ -306,8 +342,9 @@ function updateAttributes($bearertoken, $email, $attributes)
       return true;
     }
     try {
-
-      echo json_decode($response)->errors[0]->detail;
+      if (json_decode($response)) {
+        echo json_decode($response)->errors[0]->detail;
+      }
     } catch (Exception $e) {
 
     }
@@ -318,11 +355,26 @@ function updateAttributes($bearertoken, $email, $attributes)
   if (!$response) {
     return true;
   }
-
-
-
 }
 
+function auditLog($str)
+{
+  if ($_ENV['DISPLAY_LOG']) {
+    echo $str."<br/>";
+  }
+  if ($_ENV['OUTPUT_LOG']) {
+    file_put_contents($_ENV['OUTPUT_LOG'], $str, FILE_APPEND | LOCK_EX);
+  }
+}
+
+function generateAttributeObj($id, $value) {
+  return array(
+    "userattribute" => array(
+      "id" => $id,
+    ),
+    "value" => $value
+  );
+}
 
 
 ?>
