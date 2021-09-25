@@ -376,5 +376,42 @@ function generateAttributeObj($id, $value) {
   );
 }
 
+$multiAttributes = [];
+function setupMultipleAttributes($access_token, $email, $attributes)
+{
+  global $multiAttributes;
+  $multiAttributes[] = array(
+    "access_token" => $access_token,
+    "email" => $email,
+    "attributes" => $attributes
+  );
+}
+
+function setMultipleAttributes() {
+  global $multiAttributes;
+  $success = 0;
+  $fail = 0;
+  while( $attr = array_shift( $multiAttributes ) ) {  
+    $report = updateAttributes(
+      $attr['access_token'],
+      $attr['email'],
+      $attr['attributes'],
+    );
+    if ($report) {
+      $success++;
+      auditLog("Updated ".$attr['email']);
+    } else {
+      $fail++;
+      echo "<br/>";
+    }
+    
+  }
+  return array(
+    "success" => $success,
+    "fail" => $fail
+  );
+
+}
+
 
 ?>

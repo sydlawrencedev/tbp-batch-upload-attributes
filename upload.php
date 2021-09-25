@@ -89,21 +89,23 @@ if (($open = fopen($fullFilename, "r")) !== FALSE)
       }
 
       //update the attributes
-      echo $processed.", ";
-      $updated = updateAttributes($access_token, $email, $attributes);
-      if ($updated) {
-        auditLog("Updated ".$email);
-        $done++;
-      } else {
-        echo "<br/>";
-        $fail++;
-        // echo "Not able to update ".$email.", no user found<br/>";
+      setupMultipleAttributes($access_token, $email, $attributes);
+      
+      if ($processed % 5 === 0) {
+        $response = setMultipleAttributes();
+        $done += $response['success'];
+        $fail += $response['fail'];
       }
+
     }
   }
 
   fclose($open);
 }
+
+$response = setMultipleAttributes();
+  $done += $response['success'];
+  $fail += $response['fail'];
 
 
 echo $done." done / ".$fail." failed / ".$number_of_users." total<br/>";
