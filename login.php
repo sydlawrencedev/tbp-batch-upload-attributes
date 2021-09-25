@@ -82,7 +82,8 @@ if ($client_secret) {
             <?php } else { ?>
 
                 <form method="post" action="login.php?secret">
-                    <h1>You're new here...</h1>                
+                    <h2>You're new here...</h2> 
+                    <p>Because of this you need to enter your client secret, you will only need to do this once.</p>               
                     <label>Client Secret
                         <input type="password" name="client_secret"/>
                     </label>
