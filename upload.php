@@ -44,13 +44,15 @@ $response = multiAttribute($access_token, $fullFilename);
 echo $response['success']." success / ".$response['fail']." failed / ".trim($response['total'])." total";
 
 echo "<br/>";
-echo "<br/>";
+if ($_ENV['DISPLAY_LOG'] === "TRUE") {
+  echo "<br/>";
 
-$end_time = time();
-$time_to_complete = $end_time - $start_time;
-$time_per_person = ($time_to_complete/$response['total']);
-echo $time_to_complete. " seconds to complete - ".$time_per_person."s per person = ".(($time_per_person*40000)/60/60). " hours for 40000";
+  $end_time = time();
+  $time_to_complete = $end_time - $start_time;
+  $time_per_person = ($time_to_complete/$response['total']);
+  echo $time_to_complete. " seconds to complete - ".$time_per_person."s per person = ".(($time_per_person*40000)/60/60). " hours for 40000";
 
-echo "<br/>";
+  echo "<br/>";
+}
 ?>
 <a href="form.php">Go again</a>
