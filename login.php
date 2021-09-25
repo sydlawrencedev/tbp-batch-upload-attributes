@@ -50,9 +50,25 @@ if ($client_secret) {
         
         <div class="mb-3">
 
-            <h1>        <img src="https://d2wditzb2a0ndx.cloudfront.net/1631196712/img/logos/logo-tbp.png" alt="The Bot Platform Logo" width="50" height="50">
- Temp Tools Login</h1>
-            <p>To use this system you need your client id and client secret from your API access on The Bot Platform</p>
+        <nav class="navbar navbar-light bg-light">
+
+        <a class="navbar-brand" href="#">
+            Bot Tools
+        </a>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ml-auto">
+            <li class="nav-item">
+                <a class="nav-lin" href="https://dev.thebotplatform.com/" target="_blank" rel="noopener noreferrer">Built on top of The Bot Platform API</a>
+                &nbsp;
+                <a class="nav-lin" href="https://github.com/sydlawrencedev/tbp-batch-upload-attributes" target="_blank" rel="noopener noreferrer">Code on Github</a>
+            </li>
+
+        </ul>
+
+
+        </nav>
+
+        <h1>Login</h1>
+            <p>To use this system you need your client id and client secret from your API access on <a href="https://thebotplatform.com" target="_blank">The Bot Platform</a></p>
             <p>You also need to set your API access to "Authorization Code" and you need to set your Redirect URI to <code><?php echo $_ENV['TBP_API_REDIRECT_URL']; ?></code>
             <?php if (!$client_id) { ?>
                 <form method="post" action="login.php?id">
@@ -75,6 +91,8 @@ if ($client_secret) {
                 </form>
 
             <?php } ?>
+                <p>&nbsp;</p>
+            <p><a href="https://github.com/sydlawrencedev/tbp-batch-upload-attributes/blob/main/LICENSE" target="_blank">Apache License 2.0</a> Open Source<p>
         </div>
     </div>
 </body>
