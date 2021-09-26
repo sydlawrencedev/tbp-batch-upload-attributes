@@ -164,6 +164,9 @@ function multiAttribute($access_token, $filename) {
 
         $time_estimate = ceil((intval($number_of_users) * 0.021)/60);
         auditLog("Estimated duration: ".$time_estimate." mins", true);
+        if ($time_estimate >= 10) {
+            auditLog("Go make a coffee and come back later", true);
+        }
 
         } else {
         $processed++;
