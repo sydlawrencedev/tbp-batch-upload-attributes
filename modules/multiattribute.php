@@ -17,6 +17,18 @@ Class BulkAttributes {
           );
     }
 
+    function retry($curl) {
+        echo "retrying request".$_ENV['br'];
+        sleep(1);
+        $resp = curl_exec($curl);
+        $err = curl_error($curl);
+        return array(
+            "error" => $err,
+            "response" => json_decode($resp),
+            "code" => curl_getinfo($curl, CURLINFO_HTTP_CODE)
+        );
+    }
+
     function process() {
         $success = 0;
         $fail = 0;
@@ -58,19 +70,39 @@ Class BulkAttributes {
             curl_multi_remove_handle($mh, $ch);
 
             if (!$result[$k]) {
-            switch ($code = curl_getinfo($ch, CURLINFO_HTTP_CODE)) {
-                case 204:
-                $success++;
-                auditLog("Updated ".$emails[$k], true);
-                break;
-                case 403:
-                $fail++;
-                exceededAPILimit();
-                break;
-                default:
-                $fail++;
-                auditLog("Error ".$code." ".$emails[$k], true);
-            }
+                switch ($code = curl_getinfo($ch, CURLINFO_HTTP_CODE)) {
+                    case 204:
+                        $success++;
+                        auditLog("Updated ".$emails[$k], true);
+                        break;
+                    case 503:
+                    case 403:
+                        $resp = $this->retry($multiCurl [$k]);
+                        $response = $resp['response'];
+                        $err = $resp['error'];
+                        $code = $resp['code'];
+                        if ($code === 204) {
+                            $success++;
+                            auditLog("Updated ".$emails[$k], true);
+                            break;
+                        } else if ($response && $response->errors[0]->detail) {
+                            $fail++;
+                            auditLog($response->errors[0]->detail, true);
+                        } else {
+                            $fail++;
+
+                            return array(
+                                "success" => $success,
+                                "fail" => $fail,
+                                "error" => "Exceeded API Limit"
+                            );
+                            break;
+                        }
+                        break;
+                    default:
+                        $fail++;
+                        auditLog("Error ".$code." ".$emails[$k], true);
+                }
             } else {
             $fail++;
             if ($result[$k]->errors[0]->detail) {
@@ -130,6 +162,9 @@ function multiAttribute($access_token, $filename) {
         auditLog(trim($number_of_users) . " users to be updated", true);
         auditLog((count($headers) - $_ENV['ATTRIBUTE_OFFSET'])." attributes to be updated", true);
 
+        $time_estimate = ceil((intval($number_of_users) * 0.021)/60);
+        auditLog("Estimated duration: ".$time_estimate." mins", true);
+
         } else {
         $processed++;
         $email = $data[0];
@@ -155,6 +190,11 @@ function multiAttribute($access_token, $filename) {
             $response = $process->process();
             $done += $response['success'];
             $fail += $response['fail'];
+            if (isset($response['error'])) {
+                auditLog($response['error'], true);
+                auditLog("Success: ".$done.", fail: ".$fail.", total: ".$number_of_users, true);
+                exit;
+            }
         }
 
         }
@@ -166,7 +206,11 @@ function multiAttribute($access_token, $filename) {
     $response = $process->process();
     $done += $response['success'];
     $fail += $response['fail'];
-
+    if (isset($response['error'])) {
+        auditLog($resonse['error'], true);
+        auditLog("Success: ".$done.", fail: ".$fail.", completed: ".($done+$fail)."./".$number_of_users, true);
+        exit;
+    }
     return array(
         "success" => $done,
         "fail" => $fail,
