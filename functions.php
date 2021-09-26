@@ -11,7 +11,10 @@ require 'vendor/autoload.php';
 (Dotenv\Dotenv::createImmutable(__DIR__, "project.env"))->load();
 
 if (php_sapi_name() != 'cli') {
-  $protocol = strtolower(substr($_SERVER["SERVER_PROTOCOL"],0,strpos( $_SERVER["SERVER_PROTOCOL"],'/'))).'://';
+  $protocol = "https://";
+  if (strpos($_SERVER['HTTP_HOST'], "localhost") > -1) {
+    $protocol = "http://";
+  }
   $_ENV['TBP_API_REDIRECT_URL']=$protocol.$_SERVER['HTTP_HOST'].$_SERVER['DIR']."tbplogin.php";
 }
 require 'modules/TBPCLI.php';
