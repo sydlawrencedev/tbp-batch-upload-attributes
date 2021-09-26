@@ -86,9 +86,9 @@ class TBP {
   function request($method, $requestType = "POST", $postdata = "") {
     $curl = $this->constructRequest($method, $requestType, $postdata);
     $resp = curl_exec($curl);
-    $err2 = curl_error($curl);
+    $err = curl_error($curl);
     return array(
-      "error" => $err2,
+      "error" => $err,
       "response" => $resp
     );
   }
