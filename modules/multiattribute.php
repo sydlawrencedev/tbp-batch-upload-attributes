@@ -19,7 +19,6 @@ Class BulkAttributes {
 
     function retry($curl) {
         echo "retrying request".$_ENV['br'];
-        sleep(1);
         $resp = curl_exec($curl);
         $err = curl_error($curl);
         return array(
@@ -75,8 +74,12 @@ Class BulkAttributes {
                         $success++;
                         auditLog("Updated ".$emails[$k], true);
                         break;
+
+                    
                     case 503:
                     case 403:
+                        // retry it a 2nd time
+                        echo $code."&nbsp;";
                         $resp = $this->retry($multiCurl [$k]);
                         $response = $resp['response'];
                         $err = $resp['error'];
@@ -88,16 +91,52 @@ Class BulkAttributes {
                         } else if ($response && $response->errors[0]->detail) {
                             $fail++;
                             auditLog($response->errors[0]->detail, true);
-                        } else {
+                        } else if ($code === 401) {
                             $fail++;
 
                             return array(
                                 "success" => $success,
                                 "fail" => $fail,
-                                "error" => "Exceeded API Limit"
+                                "error" => "Access token expired"
                             );
-                            break;
+                            break;  
+                        } else {
+                            echo $code."&nbsp;";
+                            sleep(2);
+                            // retry for a 3rd time
+                            $resp = $this->retry($multiCurl [$k]);
+                            $response = $resp['response'];
+                            $err = $resp['error'];
+                            $code = $resp['code'];
+                            if ($code === 204) {
+                                $success++;
+                                auditLog("Updated ".$emails[$k], true);
+                                break;
+                            } else if ($response && $response->errors[0]->detail) {
+                                $fail++;
+                                auditLog($response->errors[0]->detail, true);
+                            } else {
+                                echo $code."&nbsp;";
+
+                                $fail++;
+
+                                return array(
+                                    "success" => $success,
+                                    "fail" => $fail,
+                                    "error" => "Exceeded API Limit"
+                                );
+                                break;
+                            }
                         }
+                        break;
+                    case 401:
+                        $fail++;
+
+                        return array(
+                            "success" => $success,
+                            "fail" => $fail,
+                            "error" => "Access token expired"
+                        );
                         break;
                     default:
                         $fail++;
@@ -162,9 +201,9 @@ function multiAttribute($access_token, $filename) {
         auditLog(trim($number_of_users) . " users to be updated", true);
         auditLog((count($headers) - $_ENV['ATTRIBUTE_OFFSET'])." attributes to be updated", true);
 
-        $time_estimate = ceil((intval($number_of_users) * 0.021)/60);
+        $time_estimate = ceil((intval($number_of_users) * 0.0594)/60);
         auditLog("Estimated duration: ".$time_estimate." mins", true);
-        if ($time_estimate >= 10) {
+        if ($time_estimate >= 5) {
             auditLog("Go make a coffee and come back later", true);
         }
 
@@ -190,6 +229,7 @@ function multiAttribute($access_token, $filename) {
         $process->setup($access_token, $email, $attributes);
         
         if ($processed % $_ENV['PROCESS_AT_A_TIME'] === 0) {
+            
             $response = $process->process();
             $done += $response['success'];
             $fail += $response['fail'];
