@@ -19,10 +19,11 @@ loggedInCheck();
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 ml-auto">
                 <li class="nav-item">
                     <a class="nav-lin" href="https://dev.thebotplatform.com/" target="_blank" rel="noopener noreferrer">Built on top of The Bot Platform API</a>
-                &nbsp;
+                    &nbsp;
+                    <a class="nav-lin" href="https://github.com/sydlawrencedev/tbp-batch-upload-attributes" target="_blank" rel="noopener noreferrer">Code on Github</a>
+                    &nbsp;                
                     <a class="nav-lin" href="logout.php" rel="noopener noreferrer">Logout</a>
                 </li>
-
             </ul>
 
 
