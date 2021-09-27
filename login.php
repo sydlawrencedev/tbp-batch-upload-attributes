@@ -11,9 +11,13 @@ if (isset($_GET['id'])) {
 if (isset($_SESSION['client_id'])) {
     $client_id = $_SESSION['client_id'];
 }
-
-
 if ($client_id) {
+    $sanitized_client_id = strip_tags(addslashes($client_id));
+
+    if (strlen($client_id) !== 36 || $sanitized_client_id !== $client_id) {
+        echo "invalid client_id";
+        exit;
+    }
     $creds = checkCreds($client_id);
     if ($creds) {
         try {
@@ -34,10 +38,14 @@ if (isset($_SESSION['client_secret'])) {
 }
 
 
+//6abb9f1f-9be8-46c5-ba7c-dc7d57908b85
+
+
 if ($client_secret) {
     header('Location: tbplogin.php');
     exit;
 }
+
 
 
 ?>
@@ -74,7 +82,7 @@ if ($client_secret) {
                 <form method="post" action="login.php?id">
                     <p>
                         <label>Client ID
-                        <input type="text" name="client_id"/>
+                        <input type="text" name="client_id" pattern="[a-zA-Z0-9_\-]{36}"/>
                     </label>
                     </p>
                     <input type="submit" value="Login"/>
