@@ -30,6 +30,12 @@ if ($client_id) {
 
 if (isset($_GET['secret'])) {
     $client_secret = $_POST['client_secret'];
+    $sanitized_secret = strip_tags(addslashes($client_secret));
+    if ($sanitized_secret !== $client_secret) {
+        echo "invalid client_secret";
+        exit;
+    }
+
     $_SESSION['client_secret'] = $client_secret;
 }
 
