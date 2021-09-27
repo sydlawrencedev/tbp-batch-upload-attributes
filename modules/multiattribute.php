@@ -208,37 +208,37 @@ function multiAttribute($access_token, $filename) {
         }
 
         } else {
-        $processed++;
-        $email = $data[0];
-        if (strpos($email, "@") <= 0) {
-            auditLog("Data doesn't appear to match expected csv file. Was expecting email but got: ".$email, true);
-            exit;
-        }
-
-        // get each attribute
-        $attributes = array();
-        for($y=$_ENV['ATTRIBUTE_OFFSET']; $y < count($data); $y++)
-        {
-            $attributes[] = TBP::generateAttributeObj(
-                $attribute_ids[$y-$_ENV['ATTRIBUTE_OFFSET']],
-                $data[$y]
-            );
-        }
-
-        //update the attributes
-        $process->setup($access_token, $email, $attributes);
-        
-        if ($processed % $_ENV['PROCESS_AT_A_TIME'] === 0) {
-            
-            $response = $process->process();
-            $done += $response['success'];
-            $fail += $response['fail'];
-            if (isset($response['error'])) {
-                auditLog($response['error'], true);
-                auditLog("Success: ".$done.", fail: ".$fail.", total: ".$number_of_users, true);
+            $processed++;
+            $email = $data[0];
+            if (strpos($email, "@") <= 0) {
+                auditLog("Data doesn't appear to match expected csv file. Was expecting email but got: ".$email, true);
                 exit;
             }
-        }
+
+            // get each attribute
+            $attributes = array();
+            for($y=$_ENV['ATTRIBUTE_OFFSET']; $y < count($data); $y++)
+            {
+                $attributes[] = TBP::generateAttributeObj(
+                    $attribute_ids[$y-$_ENV['ATTRIBUTE_OFFSET']],
+                    $data[$y]
+                );
+            }
+
+            //update the attributes
+            $process->setup($access_token, $email, $attributes);
+            
+            if ($processed % $_ENV['PROCESS_AT_A_TIME'] === 0) {
+                
+                $response = $process->process();
+                $done += $response['success'];
+                $fail += $response['fail'];
+                if (isset($response['error'])) {
+                    auditLog($response['error'], true);
+                    auditLog("Success: ".$done.", fail: ".$fail.", total: ".$number_of_users, true);
+                    exit;
+                }
+            }
 
         }
     }
