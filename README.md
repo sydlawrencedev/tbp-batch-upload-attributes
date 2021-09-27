@@ -4,7 +4,7 @@
 Using The Bot Platform API to bulk upload attributes from a csv file
 https://dev.thebotplatform.com
 
-## Recommended settings
+## Recommended PHP settings
 
 ; Maximum allowed size for uploaded files.
 ; http://php.net/upload-max-filesize
@@ -22,6 +22,10 @@ post_max_size = 48M
 max_execution_time = 600
 
 You can visit /check.php to check set up is correct
+
+## Security
+
+Make sure myDatabase/ is hidden
 
 ## CLI tool
 
