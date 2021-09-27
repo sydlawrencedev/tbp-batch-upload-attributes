@@ -38,6 +38,8 @@ loggedInCheck();
                         <div class="form-group">
                             <input type="submit" class="btn btn-primary" value="Upload File" name="submit">
                         </div>
+                        <input type="hidden" name="token" value="<?php echo $_SESSION['token'];?>"/>
+
                     </form>
         </div>
         <div class="mb-3">

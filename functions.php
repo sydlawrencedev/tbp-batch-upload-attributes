@@ -2,6 +2,21 @@
 
 
 session_start();
+// Generate a CSRF Token
+if (empty($_SESSION['token'])) {
+    $_SESSION['token'] = bin2hex(random_bytes(32));
+}
+$token = $_SESSION['token'];
+
+if (!empty($_POST['token'])) {
+  if (hash_equals($_SESSION['token'], $_POST['token'])) {
+    // Proceed to process the form data
+
+  } else {
+    //GET OUT
+    exit;
+  }
+}
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);

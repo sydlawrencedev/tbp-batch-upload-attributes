@@ -92,6 +92,7 @@ if ($client_secret) {
                     </label>
                     </p>
                     <input type="submit" value="Login"/>
+                    <input type="hidden" name="token" value="<?php echo $_SESSION['token'];?>"/>
                 </form>
             <?php } else { ?>
 
@@ -102,7 +103,7 @@ if ($client_secret) {
                         <input type="password" name="client_secret"/>
                     </label>
                     <input type="submit" value="Login"/>
-
+                    <input type="hidden" name="token" value="<?php echo $_SESSION['token'];?>"/>
                 </form>
 
             <?php } ?>
